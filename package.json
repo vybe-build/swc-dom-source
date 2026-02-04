@@ -1,0 +1,32 @@
+{
+  "name": "@vybe-adk/swc-dom-source",
+  "version": "0.1.0",
+  "description": "SWC plugin to inject data-source attributes into DOM elements",
+  "main": "swc_dom_source.wasm",
+  "files": [
+    "swc_dom_source.wasm"
+  ],
+  "scripts": {
+    "build": "cargo build --release --target wasm32-wasip1 && cp target/wasm32-wasip1/release/swc_dom_source.wasm .",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "swc",
+    "swc-plugin",
+    "nextjs",
+    "react",
+    "jsx",
+    "debugging",
+    "source-map"
+  ],
+  "author": "Vybe",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vybe/swc-dom-source.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vybe/swc-dom-source/issues"
+  },
+  "homepage": "https://github.com/vybe/swc-dom-source#readme"
+}
