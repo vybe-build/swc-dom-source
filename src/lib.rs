@@ -4,7 +4,7 @@ use swc_core::{
     ecma::{
         ast::{
             IdentName, JSXAttr, JSXAttrName, JSXAttrOrSpread, JSXAttrValue, JSXElement,
-            JSXElementName, JSXOpeningElement, Lit, Program, Str,
+            JSXOpeningElement, Lit, Program, Str,
         },
         visit::{VisitMut, VisitMutWith},
     },
@@ -45,10 +45,6 @@ impl DomSourceInjector<'_> {
         (loc.line, loc.col_display)
     }
 
-    fn is_host_jsx_tag(name: &JSXElementName) -> bool {
-        matches!(name, JSXElementName::Ident(ident) if ident.sym.starts_with(char::is_lowercase))
-    }
-
     fn has_attr(opening: &JSXOpeningElement, attr_name: &str) -> bool {
         opening.attrs.iter().any(|a| {
             matches!(
@@ -74,7 +70,7 @@ impl DomSourceInjector<'_> {
     }
 
     fn inject_attr(&self, opening: &mut JSXOpeningElement, span: Span) {
-        if !Self::is_host_jsx_tag(&opening.name) || Self::has_attr(opening, &self.config.attr) {
+        if Self::has_attr(opening, &self.config.attr) {
             return;
         }
 
