@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/vybe-build/swc-dom-source/actions/workflows/ci.yml/badge.svg)](https://github.com/vybe-build/swc-dom-source/actions/workflows/ci.yml)
 
-SWC plugin that injects source location data attributes into DOM elements for debugging.
+SWC plugin that injects source location data attributes into DOM elements.
 
 ## Installation
 

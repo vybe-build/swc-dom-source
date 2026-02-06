@@ -1,6 +1,6 @@
 {
   "name": "@vybe-adk/swc-dom-source",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "SWC plugin to inject data-source attributes into DOM elements",
   "main": "swc_dom_source.wasm",
   "files": [
