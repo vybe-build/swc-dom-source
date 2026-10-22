@@ -4,7 +4,7 @@ use swc_core::{
     ecma::{
         ast::{
             IdentName, JSXAttr, JSXAttrName, JSXAttrOrSpread, JSXAttrValue, JSXElement,
-            JSXOpeningElement, Lit, Program, Str,
+            JSXOpeningElement, Program, Str,
         },
         visit::{VisitMut, VisitMutWith},
     },
@@ -36,12 +36,12 @@ fn should_exclude(filename: &Option<String>, exclude_patterns: &[String]) -> boo
 struct DomSourceInjector<'a> {
     filename: Option<String>,
     config: Config,
-    metadata: &'a TransformPluginProgramMetadata,
+    source_map: &'a dyn SourceMapper,
 }
 
 impl DomSourceInjector<'_> {
     fn span_to_line_col(&self, span: Span) -> (usize, usize) {
-        let loc = self.metadata.source_map.lookup_char_pos(span.lo);
+        let loc = self.source_map.lookup_char_pos(span.lo);
         (loc.line, loc.col_display)
     }
 
@@ -61,11 +61,11 @@ impl DomSourceInjector<'_> {
         JSXAttrOrSpread::JSXAttr(JSXAttr {
             span: DUMMY_SP,
             name: JSXAttrName::Ident(IdentName::new(self.config.attr.clone().into(), DUMMY_SP)),
-            value: Some(JSXAttrValue::Lit(Lit::Str(Str {
+            value: Some(JSXAttrValue::Str(Str {
                 span: DUMMY_SP,
                 value: value.into(),
                 raw: None,
-            }))),
+            })),
         })
     }
 
@@ -90,7 +90,7 @@ impl VisitMut for DomSourceInjector<'_> {
 }
 
 #[plugin_transform]
-pub fn transform(mut program: Program, metadata: TransformPluginProgramMetadata) -> Program {
+pub fn transform(program: Program, metadata: TransformPluginProgramMetadata) -> Program {
     let config: Config = serde_json::from_str(
         &metadata
             .get_transform_plugin_config()
@@ -102,6 +102,15 @@ pub fn transform(mut program: Program, metadata: TransformPluginProgramMetadata)
         .get_context(&TransformPluginMetadataContextKind::Filename)
         .map(|s| s.to_string());
 
+    transform_with_source_map(program, filename, config, &metadata.source_map)
+}
+
+fn transform_with_source_map(
+    mut program: Program,
+    filename: Option<String>,
+    config: Config,
+    source_map: &dyn SourceMapper,
+) -> Program {
     if should_exclude(&filename, &config.exclude) {
         return program;
     }
@@ -109,8 +118,11 @@ pub fn transform(mut program: Program, metadata: TransformPluginProgramMetadata)
     program.visit_mut_with(&mut DomSourceInjector {
         filename,
         config,
-        metadata: &metadata,
+        source_map,
     });
 
     program
 }
+
+#[cfg(test)]
+mod tests;

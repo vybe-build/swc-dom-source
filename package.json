@@ -1,6 +1,6 @@
 {
   "name": "@vybe-adk/swc-dom-source",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "SWC plugin to inject data-source attributes into DOM elements",
   "main": "swc_dom_source.wasm",
   "files": [
@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build": "cargo build --release --target wasm32-wasip1 && cp target/wasm32-wasip1/release/swc_dom_source.wasm .",
+    "test:e2e": "node tests/nextjs.mjs",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
