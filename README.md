@@ -9,7 +9,7 @@ SWC plugin that injects source location data attributes into DOM elements.
 ## Installation
 
 ```bash
-npm install @vybe-adk/swc-dom-source
+npm install @vybe-adk/swc-dom-source@^0.2.0
 ```
 
 ## Usage
@@ -51,12 +51,14 @@ Example output:
 
 This plugin must match the `swc_core` version used by your framework. Using a mismatched version will cause runtime errors.
 
-| `swc_core` version | Next.js version | Status      |
-|---------------------|-----------------|-------------|
-| 35.x                | 15.x            | Supported   |
-| 36.x+               | 16.x            | Not yet supported |
+| Plugin version | `swc_core` version | Next.js version |
+|----------------|--------------------|-----------------|
+| 0.1.x          | 35.0.0             | 15.4.x          |
+| 0.2.x          | 77.0.0             | 16.4.2          |
 
-This plugin currently uses `swc_core v35.0.0`, which aligns with **Next.js 15**. Next.js 16 ships a newer SWC version and is not yet supported.
+Version 0.2.0 pins `swc_core` to 77.0.0. The [SWC compatibility table](https://plugins.swc.rs/versions/range/3012) lists `>=77.0.0 <78.0.0` for Next.js 16.4.0-canary.15 through canary.20; stable 16.4.2 was not listed when this upgrade was checked. Next.js 16.4.2's [release lockfile](https://github.com/vercel/next.js/blob/v16.4.2/Cargo.lock) uses `swc_common` 26.0.0 and `swc_plugin_runner` 34.0.0. Compatibility with 16.4.2 is covered by the Turbopack integration test below.
+
+Keep Next.js 15.4 apps on `^0.1.1`. Version 0.2.0 changes the Wasm ABI and is intentionally outside that caret range.
 
 ## Building from source
 
@@ -66,6 +68,16 @@ Requires Rust with the `wasm32-wasip1` target:
 rustup target add wasm32-wasip1
 npm run build
 ```
+
+## Testing
+
+```bash
+cargo test --locked
+npm run build
+npm run test:e2e
+```
+
+The integration test packs the local Wasm into a 0.2.0 npm tarball, installs it in a fresh Next.js 16.4.2 app, and checks HTML fetched with `curl`. It covers Turbopack development with default and custom attributes, excluded files, existing attributes, server and client components, and a production build/start with the plugin enabled. The temporary app, HTML responses, and logs are retained at the path printed by the test.
 
 ## Contributing
 

@@ -23,5 +23,15 @@ jobs:
       - name: Clippy
         run: cargo clippy --target wasm32-wasip1 -- -D warnings
 
+      - name: Unit tests
+        run: cargo test --locked
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Build
-        run: cargo build --release --target wasm32-wasip1
+        run: npm run build
+
+      - name: Next.js 16.4.2 integration
+        run: npm run test:e2e

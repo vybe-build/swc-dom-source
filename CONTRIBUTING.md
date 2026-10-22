@@ -28,6 +28,9 @@ Please ensure your code passes these checks before submitting:
 ```bash
 cargo fmt --check
 cargo clippy --target wasm32-wasip1 -- -D warnings
+cargo test --locked
+npm run build
+npm run test:e2e
 ```
 
 ## Pull request process
