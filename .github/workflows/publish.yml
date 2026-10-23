@@ -1,0 +1,84 @@
+name: Publish to NPM
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (build and pack, but don't actually publish)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Store NPM_TOKEN as a secret of this environment (not repo-level) and
+    # restrict the environment's deployment branches to main, so runs
+    # dispatched from other refs can never obtain the token.
+    environment: npm-publish
+    steps:
+      - name: Refuse to publish from a non-main ref
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::This workflow can only be dispatched from main (got ${{ github.ref }})."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Check version
+        id: version
+        run: |
+          set -euo pipefail
+
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          exists=$(npm view "$name@$version" version 2>/dev/null || true)
+          latest=$(npm view "$name" version 2>/dev/null || echo "none")
+
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$exists" ]; then
+            echo "⏭️  $name@$version is already published — nothing to do."
+            echo "\`$name@$version\` is already published — nothing to do." >> "$GITHUB_STEP_SUMMARY"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.version.outputs.publish == 'true'
+        run: npm run build
+
+      - name: Publish
+        if: steps.version.outputs.publish == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+          LATEST: ${{ steps.version.outputs.latest }}
+        run: |
+          set -euo pipefail
+
+          echo "🚀 Publishing $NAME@$VERSION (registry latest: $LATEST)"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            npm publish --access public --dry-run
+            echo "Dry run — \`$NAME@$VERSION\` (was \`$LATEST\`) was not actually published." >> "$GITHUB_STEP_SUMMARY"
+          else
+            npm publish --access public
+            echo "- \`$NAME@$VERSION\` (was \`$LATEST\`)" >> "$GITHUB_STEP_SUMMARY"
+          fi
