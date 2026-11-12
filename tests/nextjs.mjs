@@ -28,7 +28,7 @@ const [packed] = JSON.parse(run("npm", ["pack", "--json", "--pack-destination", 
 assert(packed.files.some((file) => file.path === "swc_dom_source.wasm"), "Build Wasm with npm run build first");
 run("npm", ["install", "--no-audit", "--no-fund", path.join(workspace, packed.filename)], app);
 const installed = JSON.parse(readFileSync(path.join(app, "node_modules/@vybe-adk/swc-dom-source/package.json")));
-assert.equal(installed.version, "0.2.0");
+assert.equal(installed.version, "0.2.1");
 const next = path.join(app, "node_modules/next/dist/bin/next");
 
 function checkHtml(html, attr) {
@@ -37,7 +37,7 @@ function checkHtml(html, attr) {
     assert(match, `Missing #${id}`);
     return match[0];
   };
-  for (const id of ["host", "nested", "forwarded"]) {
+  for (const id of ["host", "nested", "forwarded", "fragment"]) {
     assert.match(tag(id), new RegExp(`${attr}="[^"]*app/page\\.jsx:\\d+:\\d+"`));
   }
   assert.match(tag("client"), new RegExp(`${attr}="[^"]*components/client\\.jsx:\\d+:\\d+"`));

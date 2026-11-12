@@ -9,7 +9,7 @@ SWC plugin that injects source location data attributes into DOM elements.
 ## Installation
 
 ```bash
-npm install @vybe-adk/swc-dom-source@^0.2.0
+npm install @vybe-adk/swc-dom-source@^0.2.1
 ```
 
 ## Usage
@@ -36,7 +36,7 @@ module.exports = {
 
 ## Output
 
-The plugin adds a data attribute to host JSX elements (lowercase tags like `div`, `span`, etc.) with the format:
+The plugin adds a data attribute to every JSX element except fragments, which only accept `key` and `children`. Components receive it too, so they can forward the call site to the DOM. The format is:
 
 ```
 filename:line:column
@@ -77,7 +77,7 @@ npm run build
 npm run test:e2e
 ```
 
-The integration test packs the local Wasm into a 0.2.0 npm tarball, installs it in a fresh Next.js 16.4.2 app, and checks HTML fetched with `curl`. It covers Turbopack development with default and custom attributes, excluded files, existing attributes, server and client components, and a production build/start with the plugin enabled. The temporary app, HTML responses, and logs are retained at the path printed by the test.
+The integration test packs the local Wasm into an npm tarball, installs it in a fresh Next.js 16.4.2 app, and checks HTML fetched with `curl`. It covers Turbopack development with default and custom attributes, excluded files, existing attributes, server and client components, and a production build/start with the plugin enabled. The temporary app, HTML responses, and logs are retained at the path printed by the test.
 
 ## Contributing
 

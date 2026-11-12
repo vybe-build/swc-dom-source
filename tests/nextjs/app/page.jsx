@@ -1,4 +1,5 @@
 import { Excluded, Forwarded } from "../components/ui/button";
+import { Fragment } from "react";
 import Client from "../components/client";
 
 export default function Page() {
@@ -9,6 +10,11 @@ export default function Page() {
       <Excluded />
       <Forwarded />
       <Client />
+      {["fragment"].map((id) => (
+        <Fragment key={id}>
+          <span id={id} />
+        </Fragment>
+      ))}
     </main>
   );
 }

@@ -130,3 +130,21 @@ fn preserves_component_call_site_attributes() {
         ]
     );
 }
+
+#[test]
+fn skips_fragments_but_annotates_their_children() {
+    let attrs = attributes(
+        "<Fragment key=\"a\"><React.Fragment key=\"b\"><><div /></></React.Fragment></Fragment>",
+        Some("app/page.jsx"),
+        "{}",
+        1,
+    );
+    assert_eq!(
+        attrs.0,
+        vec![
+            vec![("key".into(), "a".into())],
+            vec![("key".into(), "b".into())],
+            vec![("data-source".into(), "app/page.jsx:1:44".into())],
+        ]
+    );
+}
