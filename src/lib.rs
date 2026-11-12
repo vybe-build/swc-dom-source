@@ -4,7 +4,7 @@ use swc_core::{
     ecma::{
         ast::{
             IdentName, JSXAttr, JSXAttrName, JSXAttrOrSpread, JSXAttrValue, JSXElement,
-            JSXOpeningElement, Lit, Program, Str,
+            JSXElementName, JSXOpeningElement, Lit, Program, Str,
         },
         visit::{VisitMut, VisitMutWith},
     },
@@ -57,6 +57,14 @@ impl DomSourceInjector<'_> {
         })
     }
 
+    fn is_fragment(name: &JSXElementName) -> bool {
+        match name {
+            JSXElementName::Ident(ident) => ident.sym == "Fragment",
+            JSXElementName::JSXMemberExpr(member) => member.prop.sym == "Fragment",
+            JSXElementName::JSXNamespacedName(_) => false,
+        }
+    }
+
     fn make_attr(&self, value: &str) -> JSXAttrOrSpread {
         JSXAttrOrSpread::JSXAttr(JSXAttr {
             span: DUMMY_SP,
@@ -70,7 +78,7 @@ impl DomSourceInjector<'_> {
     }
 
     fn inject_attr(&self, opening: &mut JSXOpeningElement, span: Span) {
-        if Self::has_attr(opening, &self.config.attr) {
+        if Self::is_fragment(&opening.name) || Self::has_attr(opening, &self.config.attr) {
             return;
         }
 
@@ -113,4 +121,52 @@ pub fn transform(mut program: Program, metadata: TransformPluginProgramMetadata)
     });
 
     program
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use swc_core::ecma::{
+        ast::{Expr, ModuleItem, Stmt},
+        parser::{parse_file_as_module, EsSyntax, Syntax},
+    };
+
+    fn element_name(source: &str) -> JSXElementName {
+        let source_map = swc_core::common::SourceMap::default();
+        let file =
+            source_map.new_source_file(swc_core::common::FileName::Anon.into(), source.to_owned());
+        let module = parse_file_as_module(
+            &file,
+            Syntax::Es(EsSyntax {
+                jsx: true,
+                ..Default::default()
+            }),
+            Default::default(),
+            None,
+            &mut vec![],
+        )
+        .expect("valid JSX fixture");
+        match &module.body[0] {
+            ModuleItem::Stmt(Stmt::Expr(stmt)) => match &*stmt.expr {
+                Expr::JSXElement(element) => element.opening.name.clone(),
+                _ => panic!("expected a JSX element"),
+            },
+            _ => panic!("expected an expression statement"),
+        }
+    }
+
+    #[test]
+    fn detects_fragments() {
+        assert!(DomSourceInjector::is_fragment(&element_name(
+            "<Fragment />"
+        )));
+        assert!(DomSourceInjector::is_fragment(&element_name(
+            "<React.Fragment />"
+        )));
+        assert!(!DomSourceInjector::is_fragment(&element_name("<div />")));
+        assert!(!DomSourceInjector::is_fragment(&element_name("<Button />")));
+        assert!(!DomSourceInjector::is_fragment(&element_name(
+            "<UI.Icon />"
+        )));
+    }
 }
