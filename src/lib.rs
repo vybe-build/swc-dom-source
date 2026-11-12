@@ -4,7 +4,7 @@ use swc_core::{
     ecma::{
         ast::{
             IdentName, JSXAttr, JSXAttrName, JSXAttrOrSpread, JSXAttrValue, JSXElement,
-            JSXOpeningElement, Program, Str,
+            JSXElementName, JSXOpeningElement, Program, Str,
         },
         visit::{VisitMut, VisitMutWith},
     },
@@ -57,6 +57,14 @@ impl DomSourceInjector<'_> {
         })
     }
 
+    fn is_fragment(name: &JSXElementName) -> bool {
+        match name {
+            JSXElementName::Ident(ident) => ident.sym == "Fragment",
+            JSXElementName::JSXMemberExpr(member) => member.prop.sym == "Fragment",
+            JSXElementName::JSXNamespacedName(_) => false,
+        }
+    }
+
     fn make_attr(&self, value: &str) -> JSXAttrOrSpread {
         JSXAttrOrSpread::JSXAttr(JSXAttr {
             span: DUMMY_SP,
@@ -70,7 +78,7 @@ impl DomSourceInjector<'_> {
     }
 
     fn inject_attr(&self, opening: &mut JSXOpeningElement, span: Span) {
-        if Self::has_attr(opening, &self.config.attr) {
+        if Self::is_fragment(&opening.name) || Self::has_attr(opening, &self.config.attr) {
             return;
         }
 
